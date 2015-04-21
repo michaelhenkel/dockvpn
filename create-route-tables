@@ -1,0 +1,48 @@
+#!/bin/bash
+
+mask2cidr() {
+    nbits=0
+    IFS=.
+    for dec in $1 ; do
+        case $dec in
+            255) let nbits+=8;;
+            254) let nbits+=7;;
+            252) let nbits+=6;;
+            248) let nbits+=5;;
+            240) let nbits+=4;;
+            224) let nbits+=3;;
+            192) let nbits+=2;;
+            128) let nbits+=1;;
+            0);;
+            *) echo "Error: $dec is not recognised"; exit 1
+        esac
+    done
+    echo "$nbits"
+}
+
+
+echo $reason > /tmp/hookj
+if [ $reason = "BOUND" ]; then
+#    grep $interface /etc/iproute2/rt_tables
+#    if [ $? -eq 0 ]; then
+#        echo ip $new_ip_address >> /tmp/hookj
+#        echo sn $new_network_number >> /tmp/hookj
+#        echo snm $new_subnet_mask >> /tmp/hookj
+#        echo gw $new_routers >> /tmp/hookj
+#        echo int $interface >> /tmp/hookj
+#        echo hn $new_host_name >> /tmp/hookj
+#        ip route delete default via $new_routers
+#        netm=$(mask2cidr $new_subnet_mask)
+#        ip route add $new_network_number/$netm dev $interface src $new_ip_address table $interface
+#        ip route add default via $new_routers table $interface
+#    fi
+    int=`grep $interface /etc/openvpn/interface-config`
+    if [ $? -eq 0 ]; then
+        site=`echo $int|awk '{print $2}'`
+        rt_table=`echo $int|awk '{print $3}'`
+        if [ $rt_table != "global" ]; then
+            ip route add $new_network_number/$netm dev $interface src $new_ip_address table $interface
+            ip route add default via $new_routers table $interface
+        fi
+    fi
+fi
